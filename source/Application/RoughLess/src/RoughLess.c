@@ -26,8 +26,8 @@ static void RoughLess_processNewFrame(double** dpFrame, int iFramesNumber);
 static void RoughLess_finishProcess(void);
 
 static Handle hCluster1 = NULL;
-//static Handle hCluster2 = NULL;
-//static Handle hCluster3 = NULL;
+static Handle hCluster2 = NULL;
+static Handle hCluster3 = NULL;
 
 int main(void)
 {
@@ -37,13 +37,13 @@ int main(void)
 
 	/*Creating new instance for GMMLib class*/
 	hCluster1 = GMMLib_new(ptagGMMCluster1,CLUSTER_FEATURE_VEC_DIM,CLUSTER_GAUSSIAN_NUMBER);
-	//hCluster2 = GMMLib_new(ptagGMMCluster2,CLUSTER_FEATURE_VEC_DIM,CLUSTER_GAUSSIAN_NUMBER);
-	//hCluster3 = GMMLib_new(ptagGMMCluster3,CLUSTER_FEATURE_VEC_DIM,CLUSTER_GAUSSIAN_NUMBER);
+	hCluster2 = GMMLib_new(ptagGMMCluster2,CLUSTER_FEATURE_VEC_DIM,CLUSTER_GAUSSIAN_NUMBER);
+	hCluster3 = GMMLib_new(ptagGMMCluster3,CLUSTER_FEATURE_VEC_DIM,CLUSTER_GAUSSIAN_NUMBER);
 
 	/*Initializing the GMMLib class reseting the probability for 0*/
 	GMMLib_init(hCluster1);
-	//GMMLib_init(hCluster2);
-	//GMMLib_init(hCluster3);
+	GMMLib_init(hCluster2);
+	GMMLib_init(hCluster3);
 
 	/*Initializing SD card*/
 	if(SDCardCtrl_createInstance(&cbfSDCardCtrlCallbackList) == True8)
@@ -56,28 +56,45 @@ int main(void)
 	}
 
 	GMMLib_delete(hCluster1);
+	GMMLib_delete(hCluster2);
+	GMMLib_delete(hCluster3);
 
-	return 0 ;
+	while(1);
+	return 0;
 }
 
 static void RoughLess_processNewFrame(double** dpFrame, int iFramesNumber)
 {
-	double p1, p2, p3; 	// P(O|M) for the GMM
-
-	p1=GMMLib_aposteriori(hCluster1,dpFrame,iFramesNumber);
-	//p2=GMMLib_aposteriori(hCluster2,dpFrame,iFramesNumber);
-	//p3=GMMLib_aposteriori(hCluster1,dpFrame,iFramesNumber);
-
-	//printf("Cluster 1: P(O|GMM) = %f\n",p1);
-	//printf("Cluster 2: P(O|GMM) = %f\n",p2);
-	//printf("Cluster 3: P(O|GMM) = %f\n",p3);
+	GMMLib_aposteriori(hCluster1,dpFrame,iFramesNumber);
+	GMMLib_aposteriori(hCluster2,dpFrame,iFramesNumber);
+	GMMLib_aposteriori(hCluster3,dpFrame,iFramesNumber);
 }
 
 static void RoughLess_finishProcess(void)
 {
-	printf("Cluster1: final P(O|GMM)=%f\n",GMMLib_getProbability(hCluster1));
-	//printf("Cluster1: final P(O|GMM)=%f\n",GMMLib_getProbability(hCluster2));
-	//printf("Cluster1: final P(O|GMM)=%f\n",GMMLib_getProbability(hCluster3));
+	double p1, p2, p3, winner; 	// P(O|M) for the GMM
+	int iWinnerCluster=0;
 
+	p1=GMMLib_getProbability(hCluster1);
+	p2=GMMLib_getProbability(hCluster2);
+	p3=GMMLib_getProbability(hCluster3);
+	winner=p1;
+	iWinnerCluster = 1;
+
+	if(p2>winner)
+	{
+		iWinnerCluster = 2;
+		winner=p2;
+	}
+	if(p3>winner)
+	{
+		iWinnerCluster = 3;
+		winner=p3;
+	}
 	SDCardCtrl_stop();
+
+	printf("Cluster1: final P(O|GMM)=%f\n",p1);
+	printf("Cluster2: final P(O|GMM)=%f\n",p2);
+	printf("Cluster3: final P(O|GMM)=%f\n",p3);
+	printf("Winner cluster: %d\n",iWinnerCluster);
 }

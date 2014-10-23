@@ -114,7 +114,7 @@ void SDCardCtrl_start(void)
 		tagSDCardCtrl.iFrameCounter=0;
 		printf("Number of frames: %d\n",tagSDCardCtrl.iNumberFrames);
 		tagSDCardCtrl.eProcessState = SDCARDCTRL_PROCESSING;
-		printf("[%2.2f s] Starting...\n",(double)tagSDCardCtrl.ulMileSeconds*TIME_RESOLUTION);
+		printf("[%06.2f s] Starting...\n",(double)tagSDCardCtrl.ulMileSeconds*TIME_RESOLUTION);
 	}
 	else
 	{
@@ -134,7 +134,7 @@ void SDCardCtrl_stop(void)
 {
 	f_close(&tagSDCardCtrl.fileHandler);
 	tagSDCardCtrl.eProcessState = SDCARDCTRL_IDLE;
-	printf("[%2.2f s] Done!\n",(double)tagSDCardCtrl.ulMileSeconds*TIME_RESOLUTION);
+	printf("[%06.2f s] Done!\n",(double)tagSDCardCtrl.ulMileSeconds*TIME_RESOLUTION);
 }
 /**
 	SDCardCtrl init. This is the method that initializes the SD card.
