@@ -45,7 +45,6 @@ typedef struct tag_GMMLib
 /*********************************************************
     private operations.
 *********************************************************/
-//static void 	GMMLib_loadGMM(Handle hClassHandler, char* GMMFilename);
 static double 	GMMLib_mixture(double* x, ttag_mixture* l, int nGaussians, int dim);
 static double 	GMMLib_gaussFunction(double* x,  double* media, double* var, int ordem);
 /*********************************************************
@@ -133,7 +132,7 @@ void GMMLib_init(Handle hClassHandler)
 */
 double GMMLib_getProbability(Handle hClassHandler)
 {
-	if(!hClassHandler) return;
+	if(!hClassHandler) return 0;
 	ttag_GMMLib* ptagGMMLib = (ttag_GMMLib*)hClassHandler;
 	return ptagGMMLib->dProbability;
 }
@@ -225,8 +224,7 @@ static double GMMLib_gaussFunction(double* x,  double* media, double* var, int o
 
 	// Calculando determinante da matriz de covariancia
 	det = 1.0;
-	for (i=0;i<ordem;i++)
-	det *= var[i];
+	for (i=0;i<ordem;i++) det *= var[i];
 
 	if (det != 0)
 	{
