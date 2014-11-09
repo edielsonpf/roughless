@@ -20,6 +20,7 @@
 #include "GMMLib.h"
 #include "ClustersConfig.h"
 #include "SDCardCtrl.h"
+#include "Log.h"
 
 // TODO: insert other definitions and declarations here
 static void RoughLess_processNewFrame(double** dpFrame, int iFramesNumber);
@@ -93,8 +94,8 @@ static void RoughLess_finishProcess(void)
 	}
 	SDCardCtrl_stop();
 
-	printf("Cluster1: final P(O|GMM)=%f\n",p1);
-	printf("Cluster2: final P(O|GMM)=%f\n",p2);
-	printf("Cluster3: final P(O|GMM)=%f\n",p3);
-	printf("Winner cluster: %d\n",iWinnerCluster);
+	Log_print(LOG_FACILITY_USER_LEVEL_MESSAGES,LOG_SEVERITY_INFORMATIONAL,"Cluster1: final P(O|GMM)=%f",p1);
+	Log_print(LOG_FACILITY_USER_LEVEL_MESSAGES,LOG_SEVERITY_INFORMATIONAL,"Cluster2: final P(O|GMM)=%f",p2);
+	Log_print(LOG_FACILITY_USER_LEVEL_MESSAGES,LOG_SEVERITY_INFORMATIONAL,"Cluster3: final P(O|GMM)=%f",p3);
+	Log_print(LOG_FACILITY_USER_LEVEL_MESSAGES,LOG_SEVERITY_INFORMATIONAL,"Winner cluster: %d\n",iWinnerCluster);
 }

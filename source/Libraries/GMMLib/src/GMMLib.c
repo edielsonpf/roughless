@@ -45,7 +45,7 @@ typedef struct tag_GMMLib
 /*********************************************************
     private operations.
 *********************************************************/
-static double 	GMMLib_mixture(double* x, ttag_mixture* l, int nGaussians, int dim);
+//static double 	GMMLib_mixture(double* x, ttag_mixture* l, int nGaussians, int dim);
 static double 	GMMLib_gaussFunction(double* x,  double* media, double* var, int ordem);
 /*********************************************************
     Operations implementation
@@ -64,7 +64,7 @@ static double 	GMMLib_gaussFunction(double* x,  double* media, double* var, int 
 Handle GMMLib_new(ttag_mixture* ptagGMM, int iDimFeatureVector, int iGaussiansNumber)
 {
 	ttag_GMMLib* ptagGMMLib = (ttag_GMMLib*)malloc(sizeof(ttag_GMMLib));
-	int i,j;
+//	int i,j;
 	if(ptagGMMLib)
 	{
 		ptagGMMLib->ptagGMMElements = ptagGMM;
@@ -148,14 +148,22 @@ double GMMLib_getProbability(Handle hClassHandler)
 double GMMLib_aposteriori(Handle hClassHandler, double** dpObsVectorSequence, int iFramesNumber)
 {
 	if(!hClassHandler) return 0;
-	ttag_GMMLib* ptagGMMLib = (ttag_GMMLib*)hClassHandler;
 
-	double p; 		// P(i|X,M)
-	int t; 			// counter
+	ttag_GMMLib* ptagGMMLib = (ttag_GMMLib*)hClassHandler;
+	double p; 			// P(i|X,M)
+	int t; 				// counter
+	int iGaussIndex;    // counter
 
 	for (t=0;t<iFramesNumber;t++)
 	{
-		p = GMMLib_mixture(dpObsVectorSequence[t],ptagGMMLib->ptagGMMElements,ptagGMMLib->iGaussiansNumber,ptagGMMLib->iDimFeatureVector);
+		//p = GMMLib_mixture(dpObsVectorSequence[t],ptagGMMLib->ptagGMMElements,ptagGMMLib->iGaussiansNumber,ptagGMMLib->iDimFeatureVector);
+		p = 0.0;
+		for (iGaussIndex=0;iGaussIndex<ptagGMMLib->iGaussiansNumber;iGaussIndex++)
+		{
+			p += ptagGMMLib->ptagGMMElements[iGaussIndex].dMixtureWeight
+				 *GMMLib_gaussFunction(dpObsVectorSequence[t],ptagGMMLib->ptagGMMElements[iGaussIndex].dpGaussianMean,
+				 ptagGMMLib->ptagGMMElements[iGaussIndex].dpGaussianCovariance,ptagGMMLib->iDimFeatureVector);
+		}
 		ptagGMMLib->dProbability += log10(p);
 	}
 	return ptagGMMLib->dProbability;
@@ -186,17 +194,17 @@ int GMMLib_getFeatureVectorDim(Handle hClassHandler)
     @author edielson
     @date   02/09/2014
 */
-static double GMMLib_mixture(double *x, ttag_mixture* l, int nGaussians, int dim)
-{
-	double p; // P(O|M)
-	int j;    // counter
-
-	p = 0.0;
-	for (j=0;j<nGaussians;j++)
-	  p += l[j].dMixtureWeight * GMMLib_gaussFunction(x,l[j].dpGaussianMean,l[j].dpGaussianCovariance,dim);
-
-	return p;
-}
+//static double GMMLib_mixture(double *x, ttag_mixture* l, int nGaussians, int dim)
+//{
+//	double p; // P(O|M)
+//	int j;    // counter
+//
+//	p = 0.0;
+//	for (j=0;j<nGaussians;j++)
+//	  p += l[j].dMixtureWeight * GMMLib_gaussFunction(x,l[j].dpGaussianMean,l[j].dpGaussianCovariance,dim);
+//
+//	return p;
+//}
 
 /**
 	GMMLib destructor. This is the destructor method, it deallocates memory

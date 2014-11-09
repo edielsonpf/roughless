@@ -3,11 +3,6 @@
 	<name>RoughLess</name>
 	<comment></comment>
 	<projects>
-		<project>CMSISv2p00_LPC17xx</project>
-		<project>GMMLib</project>
-		<project>Lib_EaBaseBoard</project>
-		<project>Lib_FatFs_SD</project>
-		<project>Lib_MCU</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

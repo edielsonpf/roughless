@@ -9,6 +9,7 @@
 #include <stdlib.h>
 
 #include "SDCardCtrl.h"
+#include "Log.h"
 #include "lpc17xx_pinsel.h"
 #include "lpc17xx_gpio.h"
 #include "lpc17xx_ssp.h"
@@ -61,6 +62,8 @@ Bool8 SDCardCtrl_createInstance(tcbf_SDCardCtrlCallbackList* pcbfCallbackList)
 	Bool8 bResult = False8;
 	int iCounter;
 
+	Log_init();
+
 	if(SDCardCtrl_init()==True8)
 	{
 		tagSDCardCtrl.eProcessState = SDCARDCTRL_IDLE;
@@ -103,22 +106,22 @@ void SDCardCtrl_delete(void)
 */
 void SDCardCtrl_start(void)
 {
-	printf("Opening file %s...",UTTERANCE_FILE_NAME);
+	Log_print(LOG_FACILITY_USER_LEVEL_MESSAGES,LOG_SEVERITY_INFORMATIONAL,"Opening file %s...",UTTERANCE_FILE_NAME);
 	if(f_open(&tagSDCardCtrl.fileHandler,(char*)UTTERANCE_FILE_NAME, FA_READ) == FR_OK)
 	{
-		printf("Success!\n",UTTERANCE_FILE_NAME);
+		Log_print(LOG_FACILITY_USER_LEVEL_MESSAGES,LOG_SEVERITY_INFORMATIONAL,"Success!\n",UTTERANCE_FILE_NAME);
 
 		tagSDCardCtrl.iTotalBytes = sizeof(tagSDCardCtrl.fileHandler.fsize);
 		tagSDCardCtrl.iFrameSize = UTTERANCE_DIM_FEATURE*sizeof(double);
 		tagSDCardCtrl.iNumberFrames = tagSDCardCtrl.fileHandler.fsize/tagSDCardCtrl.iFrameSize;
 		tagSDCardCtrl.iFrameCounter=0;
-		printf("Number of frames: %d\n",tagSDCardCtrl.iNumberFrames);
+		Log_print(LOG_FACILITY_USER_LEVEL_MESSAGES,LOG_SEVERITY_INFORMATIONAL,"Total number of frames: %d\n",tagSDCardCtrl.iNumberFrames);
 		tagSDCardCtrl.eProcessState = SDCARDCTRL_PROCESSING;
-		printf("[%06.2f s] Starting...\n",(double)tagSDCardCtrl.ulMileSeconds*TIME_RESOLUTION);
+		Log_print(LOG_FACILITY_USER_LEVEL_MESSAGES,LOG_SEVERITY_INFORMATIONAL,"[%06.2f s] Starting diagnosis...",(double)tagSDCardCtrl.ulMileSeconds*TIME_RESOLUTION);
 	}
 	else
 	{
-		printf("Couldn't open file %s",UTTERANCE_FILE_NAME);
+		Log_print(LOG_FACILITY_USER_LEVEL_MESSAGES,LOG_SEVERITY_INFORMATIONAL,"Couldn't open file %s",UTTERANCE_FILE_NAME);
 	}
 }
 
@@ -134,7 +137,7 @@ void SDCardCtrl_stop(void)
 {
 	f_close(&tagSDCardCtrl.fileHandler);
 	tagSDCardCtrl.eProcessState = SDCARDCTRL_IDLE;
-	printf("[%06.2f s] Done!\n",(double)tagSDCardCtrl.ulMileSeconds*TIME_RESOLUTION);
+	Log_print(LOG_FACILITY_USER_LEVEL_MESSAGES,LOG_SEVERITY_INFORMATIONAL,"[%06.2f s] Done!\n",(double)tagSDCardCtrl.ulMileSeconds*TIME_RESOLUTION);
 }
 /**
 	SDCardCtrl init. This is the method that initializes the SD card.
@@ -159,67 +162,65 @@ static Bool8 SDCardCtrl_init(void)
 	SysTick_Config(SystemCoreClock / 100);
 //	SysTick_Config(SystemCoreClock / 1000);
 
-	printf("Starting MMC/SD.....\n");
+	Log_print(LOG_FACILITY_USER_LEVEL_MESSAGES,LOG_SEVERITY_INFORMATIONAL,"Starting MMC/SD...");
 
 	Timer0_Wait(500);
 
 	stat = disk_initialize(0);
 	if(stat & STA_NODISK)
 	{
-		printf("MMC: No Disk\n");
+		Log_print(LOG_FACILITY_USER_LEVEL_MESSAGES,LOG_SEVERITY_INFORMATIONAL,"MMC: No Disk\n");
 	}
 	if(stat & STA_NOINIT)
 	{
-		printf("MMC: Not initialized\n");
+		Log_print(LOG_FACILITY_USER_LEVEL_MESSAGES,LOG_SEVERITY_INFORMATIONAL,"MMC: Not initialized\n");
 	}
 	if(stat == 0)
 	{
-		printf("MMC: Initialized\n");
+		Log_print(LOG_FACILITY_USER_LEVEL_MESSAGES,LOG_SEVERITY_INFORMATIONAL,"MMC: Initialized\n");
 
 		if (disk_ioctl(0, GET_SECTOR_COUNT, &p2) == RES_OK)
 		{
-			printf("Drive size: %ld \n", p2);
+			Log_print(LOG_FACILITY_USER_LEVEL_MESSAGES,LOG_SEVERITY_INFORMATIONAL,"Drive size: %ld", p2);
 		}
 		if (disk_ioctl(0, GET_SECTOR_SIZE, &w1) == RES_OK)
 		{
-				printf("Sector size: %d \n", w1);
+				Log_print(LOG_FACILITY_USER_LEVEL_MESSAGES,LOG_SEVERITY_INFORMATIONAL,"Sector size: %d", w1);
 		}
 
 		if (disk_ioctl(0, GET_BLOCK_SIZE, &p2) == RES_OK)
 		{
-			printf("Erase block size: %ld \n", p2);
+			Log_print(LOG_FACILITY_USER_LEVEL_MESSAGES,LOG_SEVERITY_INFORMATIONAL,"Erase block size: %ld", p2);
 		}
 
 		if (disk_ioctl(0, MMC_GET_TYPE, &b1) == RES_OK)
 		{
-			printf("Card type: %d \n", b1);
+			Log_print(LOG_FACILITY_USER_LEVEL_MESSAGES,LOG_SEVERITY_INFORMATIONAL,"Card type: %d", b1);
 		}
 
 		res = f_mount(0, &tagSDCardCtrl.Fatfs[0]);
 		if (res != FR_OK)
 		{
-			printf("Failed to mount 0: %d \n", res);
+			Log_print(LOG_FACILITY_USER_LEVEL_MESSAGES,LOG_SEVERITY_INFORMATIONAL,"Failed to mount 0: %d \n", res);
 		}
 		else
 		{
 			res = f_opendir(&dir, "/");
 			if (res)
 			{
-				printf("Failed to open /: %d \n", res);
+				Log_print(LOG_FACILITY_USER_LEVEL_MESSAGES,LOG_SEVERITY_INFORMATIONAL,"Failed to open /: %d \n", res);
 			}
 			else
 			{
-				printf("\nListing files and folders\r\n", res);
+				Log_print(LOG_FACILITY_USER_LEVEL_MESSAGES,LOG_SEVERITY_INFORMATIONAL,"Listing files and folders\n", res);
 				do
 				{
 					res = f_readdir(&dir, &tagSDCardCtrl.Finfo);
 					if ((res == FR_OK) && (tagSDCardCtrl.Finfo.fname[0]))
 					{
-						printf(&(tagSDCardCtrl.Finfo.fname[0]));
-						printf("\n");
+						Log_print(LOG_FACILITY_USER_LEVEL_MESSAGES,LOG_SEVERITY_INFORMATIONAL,&(tagSDCardCtrl.Finfo.fname[0]));
 					}
 				}while((res == FR_OK) && (tagSDCardCtrl.Finfo.fname[0]));
-				printf("\r\n");
 				bResult = True8;
 			}
 		}
@@ -245,26 +246,28 @@ tenu_SDCardProcessState SDCardCtrl_process(void)
 			if(tagSDCardCtrl.iFrameCounter < tagSDCardCtrl.iNumberFrames)
 			{
 				byteRead = 0;
+				//Log_print(LOG_FACILITY_USER_LEVEL_MESSAGES,LOG_SEVERITY_DEBUG,"[%06.2f s]Reading frame [%d]",(double)tagSDCardCtrl.ulMileSeconds*TIME_RESOLUTION,tagSDCardCtrl.iFrameCounter);
 				if(f_read(&tagSDCardCtrl.fileHandler, tagSDCardCtrl.dpUtteranceFrame[0], sizeof(double)*UTTERANCE_DIM_FEATURE, &byteRead)==FR_OK)
 				{
 					if(byteRead == tagSDCardCtrl.iFrameSize)
 					{
+						//Log_print(LOG_FACILITY_USER_LEVEL_MESSAGES,LOG_SEVERITY_DEBUG,"[%06.2f s][Frame %d]Processing",(double)tagSDCardCtrl.ulMileSeconds*TIME_RESOLUTION,tagSDCardCtrl.iFrameCounter);
 						/*Calculating the cumulative P(O|GMM) for each frame*/
 						if(tagSDCardCtrl.pcbfCallbackList->cbfProcessNewFrame)
 							tagSDCardCtrl.pcbfCallbackList->cbfProcessNewFrame(tagSDCardCtrl.dpUtteranceFrame,UTTERANCE_MAX_FRAME_SIZE);
-
+						//Log_print(LOG_FACILITY_USER_LEVEL_MESSAGES,LOG_SEVERITY_DEBUG,"[%06.2f s][Frame %d]End",(double)tagSDCardCtrl.ulMileSeconds*TIME_RESOLUTION,tagSDCardCtrl.iFrameCounter);
 						tagSDCardCtrl.iTotalBytes-=byteRead;
 						tagSDCardCtrl.iFrameCounter++;
 					}
 					else
 					{
-						printf("Bytes read different from the expected: %d != %d\r\n", byteRead, tagSDCardCtrl.iFrameSize);
+						Log_print(LOG_FACILITY_USER_LEVEL_MESSAGES,LOG_SEVERITY_INFORMATIONAL,"Bytes read different from the expected: %d != %d\r\n", byteRead, tagSDCardCtrl.iFrameSize);
 						tagSDCardCtrl.eProcessState = SDCARDCTRL_ERROR;
 					}
 				}
 				else
 				{
-					printf("Error reading file!\r\n");
+					Log_print(LOG_FACILITY_USER_LEVEL_MESSAGES,LOG_SEVERITY_INFORMATIONAL,"Error reading file!\r\n");
 					tagSDCardCtrl.eProcessState = SDCARDCTRL_ERROR;
 				}
 			}
@@ -279,7 +282,7 @@ tenu_SDCardProcessState SDCardCtrl_process(void)
 				tagSDCardCtrl.pcbfCallbackList->cbfFinishProcess();
 			break;
 		case SDCARDCTRL_ERROR:
-			printf("Error, closing file");
+			Log_print(LOG_FACILITY_USER_LEVEL_MESSAGES,LOG_SEVERITY_INFORMATIONAL,"Error, closing file");
 			f_close(&tagSDCardCtrl.fileHandler);
 			tagSDCardCtrl.eProcessState = SDCARDCTRL_IDLE;
 			break;
