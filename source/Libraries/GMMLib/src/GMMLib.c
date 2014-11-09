@@ -14,7 +14,6 @@
 #include "string.h"
 
 #include "GMMLib.h"
-#include "GMMLibConfig.h"
 
 #define PI 2*asin(1)
 #define INF 1.5e308
