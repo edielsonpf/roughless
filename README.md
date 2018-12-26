@@ -1,2 +1,2 @@
-# roughless
-Surface roughness classification system based on sound parameters
+# RoughLess
+Surface roughness classification system based on sound parameters.
